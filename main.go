@@ -12,5 +12,7 @@ func main() {
 	}
 	defer logger.Close()
 
+	logger.Write("Running main UI loop")
 	runUI()
+	logger.Write("Exiting main UI loop")
 }

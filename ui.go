@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -32,13 +33,26 @@ func homeView(w fyne.Window) *fyne.Container {
 	infoLabel := widget.NewLabel("Please select the files to be merged")
 	infoLabel.Wrapping = fyne.TextWrapWord
 
+	fileList := widget.NewList(
+		func() int { return len(SelectedFiles) },
+		func() fyne.CanvasObject { return widget.NewLabel("") },
+		func(i widget.ListItemID, o fyne.CanvasObject) {
+			o.(*widget.Label).SetText(SelectedFiles[i])
+		},
+	)
+	fileListCard := widget.NewCard("Selected Files", "", fileList)
+
 	browseButton := widget.NewButton("Browse", func() {
-		dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
+		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil || reader == nil {
 				return
 			}
 			SelectedFiles = append(SelectedFiles, reader.URI().Name())
+			fileList.Refresh()
 		}, w)
+
+		fd.SetFilter(storage.NewExtensionFileFilter([]string{".pdf"}))
+		fd.Show()
 	})
 	submitButton := widget.NewButton("Submit", func() {})
 
@@ -50,5 +64,5 @@ func homeView(w fyne.Window) *fyne.Container {
 			RightPadding:  15,
 		}, container.NewHBox(layout.NewSpacer(), browseButton, submitButton))
 
-	return container.NewBorder(infoLabel, buttons, nil, nil, nil)
+	return container.NewBorder(infoLabel, buttons, nil, nil, fileListCard)
 }
