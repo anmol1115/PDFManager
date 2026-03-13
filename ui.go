@@ -11,6 +11,7 @@ import (
 )
 
 var SelectedFiles []string
+var OutputFilePath string
 
 func runUI() {
 	a := app.New()
@@ -42,6 +43,13 @@ func homeView(w fyne.Window) *fyne.Container {
 	)
 	fileListCard := widget.NewCard("Selected Files", "", fileList)
 
+	outputEntry := widget.NewEntry()
+	outputEntry.SetPlaceHolder("Select output directory...")
+
+	outputBrowseButton := widget.NewButton("Browse", func() {})
+
+	outputRow := container.NewBorder(nil, nil, nil, outputBrowseButton, outputEntry)
+
 	browseButton := widget.NewButton("Browse", func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil || reader == nil {
@@ -64,5 +72,10 @@ func homeView(w fyne.Window) *fyne.Container {
 			RightPadding:  15,
 		}, container.NewHBox(layout.NewSpacer(), browseButton, submitButton))
 
-	return container.NewBorder(infoLabel, buttons, nil, nil, fileListCard)
+	return container.NewBorder(
+		infoLabel,
+		container.NewVBox(outputRow, buttons),
+		nil, nil,
+		fileListCard,
+	)
 }
