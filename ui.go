@@ -1,6 +1,8 @@
 package main
 
 import (
+	"path/filepath"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -39,16 +41,25 @@ func homeView(w fyne.Window) *fyne.Container {
 		func() int { return len(SelectedFiles) },
 		func() fyne.CanvasObject { return widget.NewLabel("") },
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(SelectedFiles[i])
+			o.(*widget.Label).SetText(filepath.Base(SelectedFiles[i]))
 		},
 	)
+
 	fileListCard := widget.NewCard("Selected Files", "", fileList)
 
 	outputEntry := widget.NewEntry()
 	outputEntry.SetPlaceHolder(OutputFilePath)
 	outputEntry.Disable()
 
-	outputBrowseButton := widget.NewButton("Browse", func() {})
+	outputBrowseButton := widget.NewButton("Browse", func() {
+		dialog.ShowFolderOpen(func(reader fyne.ListableURI, err error) {
+			if err != nil || reader == nil {
+				return
+			}
+			OutputFilePath = reader.Path()
+			outputEntry.SetPlaceHolder(OutputFilePath)
+		}, w)
+	})
 
 	outputRow := container.NewBorder(nil, nil, nil, outputBrowseButton, outputEntry)
 
@@ -71,7 +82,7 @@ func homeView(w fyne.Window) *fyne.Container {
 			TopPadding:    10,
 			BottomPadding: 10,
 			LeftPadding:   15,
-			RightPadding:  15,
+			RightPadding:  0,
 		}, container.NewHBox(layout.NewSpacer(), browseButton, submitButton))
 
 	return container.NewBorder(
