@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"time"
 )
 
@@ -12,29 +11,7 @@ type Logger struct {
 	File *os.File
 }
 
-func initLogger() (*Logger, error) {
-	dirPath := "."
-	switch runtime.GOOS {
-	case "windows":
-		dirPath = filepath.Join(os.Getenv("APPDATA"), "PDFManager", "logs")
-	case "linux":
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return nil, err
-		}
-		dirPath = filepath.Join(homeDir, ".local", "share", "PDFManager", "logs")
-	case "darwin":
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return nil, err
-		}
-		dirPath = filepath.Join(homeDir, "Library", "Logs", "PDFManager")
-	}
-
-	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		return nil, err
-	}
-
+func initLogger(dirPath string) (*Logger, error) {
 	filePath := filepath.Join(dirPath, "app.log")
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {

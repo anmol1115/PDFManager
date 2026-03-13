@@ -13,7 +13,8 @@ import (
 var SelectedFiles []string
 var OutputFilePath string
 
-func runUI() {
+func runUI(outputDir string) {
+	OutputFilePath = outputDir
 	a := app.New()
 
 	w := newWindow(a)
@@ -44,7 +45,8 @@ func homeView(w fyne.Window) *fyne.Container {
 	fileListCard := widget.NewCard("Selected Files", "", fileList)
 
 	outputEntry := widget.NewEntry()
-	outputEntry.SetPlaceHolder("Select output directory...")
+	outputEntry.SetPlaceHolder(OutputFilePath)
+	outputEntry.Disable()
 
 	outputBrowseButton := widget.NewButton("Browse", func() {})
 
