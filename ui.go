@@ -17,7 +17,7 @@ import (
 var SelectedFiles []string
 var OutputFilePath string
 
-func runUI(outputDir string, l Logger) {
+func runUI(outputDir string, l *Logger) {
 	OutputFilePath = outputDir
 	a := app.New()
 
@@ -62,7 +62,7 @@ func getBrowseFileButton(fileList *widget.List, w fyne.Window) *widget.Button {
 	})
 }
 
-func getSubmitButton(a fyne.App, w fyne.Window, l Logger) *widget.Button {
+func getSubmitButton(a fyne.App, w fyne.Window, l *Logger) *widget.Button {
 	return widget.NewButton("Submit", func() {
 		err := mergePDF(SelectedFiles, OutputFilePath)
 		if err != nil {
@@ -85,7 +85,7 @@ func getSubmitButton(a fyne.App, w fyne.Window, l Logger) *widget.Button {
 	})
 }
 
-func homeView(a fyne.App, w fyne.Window, l Logger) *fyne.Container {
+func homeView(a fyne.App, w fyne.Window, l *Logger) *fyne.Container {
 	infoLabel := widget.NewLabel("Please select the files to be merged")
 	infoLabel.Wrapping = fyne.TextWrapWord
 
