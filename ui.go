@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"path/filepath"
 
 	"fyne.io/fyne/v2"
@@ -15,12 +17,12 @@ import (
 var SelectedFiles []string
 var OutputFilePath string
 
-func runUI(outputDir string) {
+func runUI(outputDir string, l Logger) {
 	OutputFilePath = outputDir
 	a := app.New()
 
 	w := newWindow(a)
-	w.SetContent(homeView(w))
+	w.SetContent(homeView(a, w, l))
 
 	w.ShowAndRun()
 }
@@ -33,7 +35,57 @@ func newWindow(a fyne.App) fyne.Window {
 	return w
 }
 
-func homeView(w fyne.Window) *fyne.Container {
+func getOutputBrowseButton(outputEntry *widget.Entry, w fyne.Window) *widget.Button {
+	return widget.NewButton("Browse", func() {
+		dialog.ShowFolderOpen(func(reader fyne.ListableURI, err error) {
+			if err != nil || reader == nil {
+				return
+			}
+			OutputFilePath = reader.Path()
+			outputEntry.SetPlaceHolder(OutputFilePath)
+		}, w)
+	})
+}
+
+func getBrowseFileButton(fileList *widget.List, w fyne.Window) *widget.Button {
+	return widget.NewButton("Browse", func() {
+		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+			if err != nil || reader == nil {
+				return
+			}
+			SelectedFiles = append(SelectedFiles, reader.URI().Path())
+			fileList.Refresh()
+		}, w)
+
+		fd.SetFilter(storage.NewExtensionFileFilter([]string{".pdf"}))
+		fd.Show()
+	})
+}
+
+func getSubmitButton(a fyne.App, w fyne.Window, l Logger) *widget.Button {
+	return widget.NewButton("Submit", func() {
+		err := mergePDF(SelectedFiles, OutputFilePath)
+		if err != nil {
+			l.Write(fmt.Sprintf("Some error occurred while merging: %v", err))
+			dialog.ShowError(errors.New("Error: Check log file for detailed response"), w)
+		} else {
+			var d dialog.Dialog
+			quitBtn := widget.NewButton("OK", func() {
+				d.Hide()
+				a.Quit()
+			})
+			content := container.NewVBox(
+				widget.NewLabel("PDFs merged successfully!"),
+				container.NewHBox(layout.NewSpacer(), quitBtn),
+			)
+			d = dialog.NewCustomWithoutButtons("Success", content, w)
+			d.Resize(fyne.NewSize(300, 150))
+			d.Show()
+		}
+	})
+}
+
+func homeView(a fyne.App, w fyne.Window, l Logger) *fyne.Container {
 	infoLabel := widget.NewLabel("Please select the files to be merged")
 	infoLabel.Wrapping = fyne.TextWrapWord
 
@@ -51,31 +103,11 @@ func homeView(w fyne.Window) *fyne.Container {
 	outputEntry.SetPlaceHolder(OutputFilePath)
 	outputEntry.Disable()
 
-	outputBrowseButton := widget.NewButton("Browse", func() {
-		dialog.ShowFolderOpen(func(reader fyne.ListableURI, err error) {
-			if err != nil || reader == nil {
-				return
-			}
-			OutputFilePath = reader.Path()
-			outputEntry.SetPlaceHolder(OutputFilePath)
-		}, w)
-	})
-
+	outputBrowseButton := getOutputBrowseButton(outputEntry, w)
 	outputRow := container.NewBorder(nil, nil, nil, outputBrowseButton, outputEntry)
 
-	browseButton := widget.NewButton("Browse", func() {
-		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
-			if err != nil || reader == nil {
-				return
-			}
-			SelectedFiles = append(SelectedFiles, reader.URI().Name())
-			fileList.Refresh()
-		}, w)
-
-		fd.SetFilter(storage.NewExtensionFileFilter([]string{".pdf"}))
-		fd.Show()
-	})
-	submitButton := widget.NewButton("Submit", func() {})
+	browseFileButton := getBrowseFileButton(fileList, w)
+	submitButton := getSubmitButton(a, w, l)
 
 	buttons := container.New(
 		layout.CustomPaddedLayout{
@@ -83,7 +115,7 @@ func homeView(w fyne.Window) *fyne.Container {
 			BottomPadding: 10,
 			LeftPadding:   15,
 			RightPadding:  0,
-		}, container.NewHBox(layout.NewSpacer(), browseButton, submitButton))
+		}, container.NewHBox(layout.NewSpacer(), browseFileButton, submitButton))
 
 	return container.NewBorder(
 		infoLabel,

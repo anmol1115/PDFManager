@@ -18,6 +18,6 @@ func main() {
 	defer logger.Close()
 
 	logger.Write("Running main UI loop")
-	runUI(outputDir)
+	runUI(outputDir, logger)
 	logger.Write("Exiting main UI loop")
 }
