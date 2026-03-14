@@ -20,6 +20,7 @@ var OutputFilePath string
 func runUI(outputDir string, l *Logger) {
 	OutputFilePath = outputDir
 	a := app.New()
+	a.Settings().SetTheme(&baseTheme{})
 
 	w := newWindow(a)
 	w.SetContent(homeView(a, w, l))
