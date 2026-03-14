@@ -6,9 +6,9 @@ const WINDOW_HEIGHT float32 = 500
 const WINDOW_WIDTH float32 = 700
 
 func main() {
-	outputDir, logDir, err := ensureOperationsDir()
+	logDir, outputDir, err := ensureOperationsDir()
 	if err != nil {
-		log.Fatal("Unable to initialize operations directory: %v", err)
+		log.Fatalf("Unable to initialize operations directory: %v", err)
 	}
 
 	logger, err := initLogger(logDir)
